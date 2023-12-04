@@ -533,16 +533,39 @@ date (1): dob
 10 Silverstone Circuit            Lewis Hamilton  2016</code></pre>
 </div>
 </div>
+<p>I also want a tibble for just the most recent race winners for a card on the website.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>recent_circuit_winners<span class="ot">&lt;-</span> circuit_race_winners <span class="sc">|&gt;</span> </span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(yr <span class="sc">==</span> <span class="dv">2023</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>recent_circuit_winners <span class="sc">|&gt;</span> <span class="fu">head</span>(<span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 3
+   name                           winner_name       yr
+   &lt;chr&gt;                          &lt;chr&gt;          &lt;dbl&gt;
+ 1 Bahrain International Circuit  Max Verstappen  2023
+ 2 Jeddah Corniche Circuit        Sergio Pérez    2023
+ 3 Albert Park Grand Prix Circuit Max Verstappen  2023
+ 4 Baku City Circuit              Sergio Pérez    2023
+ 5 Miami International Autodrome  Max Verstappen  2023
+ 6 Circuit de Monaco              Max Verstappen  2023
+ 7 Circuit de Barcelona-Catalunya Max Verstappen  2023
+ 8 Circuit Gilles Villeneuve      Max Verstappen  2023
+ 9 Red Bull Ring                  Max Verstappen  2023
+10 Silverstone Circuit            Max Verstappen  2023</code></pre>
+</div>
+</div>
 </section>
 <section id="write-circuits-to-google-sheets" class="level3">
 <h3 class="anchored" data-anchor-id="write-circuits-to-google-sheets">Write circuits to Google sheets</h3>
 <p>I’m going to do the same thing I did with Google sheets for my drivers and constructors standings, but this time with circuits!</p>
+<p>Let’s start with just the recent winners.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add Google sheet URL</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>circuitsheet_url <span class="ot">&lt;-</span> <span class="st">"https://docs.google.com/spreadsheets/d/1VOS_3RxH2i3Y7__A1VfdbmX_RPi7JmTa6WmIzfgne84/edit?usp=sharing"</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Authenticate my Google account</span></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="fu">gs4_auth</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add Google sheet URL</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>circuitsheet_url <span class="ot">&lt;-</span> <span class="st">"https://docs.google.com/spreadsheets/d/1VOS_3RxH2i3Y7__A1VfdbmX_RPi7JmTa6WmIzfgne84/edit?usp=sharing"</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Authenticate my Google account</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="fu">gs4_auth</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>! Using an auto-discovered, cached token.</code></pre>
 </div>
@@ -560,14 +583,51 @@ date (1): dob
 <pre><code>ℹ The googlesheets4 package is using a cached token for
   'athenahawkins@utexas.edu'.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the existing Google Sheet into R</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>existing_circuitsheet <span class="ot">&lt;-</span> <span class="fu">gs4_get</span>(circuitsheet_url)</span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Write the data frame to the Google Sheet</span></span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>existing_circuitsheet <span class="sc">|&gt;</span>  </span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">range_write</span>(circuit_race_winners)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the existing Google Sheet into R</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>existing_circuitsheet <span class="ot">&lt;-</span> <span class="fu">gs4_get</span>(circuitsheet_url)</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Write the data frame to the Google Sheet</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>existing_circuitsheet <span class="sc">|&gt;</span>  </span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">range_write</span>(recent_circuit_winners)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>✔ Editing "circuits".</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>✔ Writing to sheet 'tracks'.</code></pre>
+</div>
+</div>
+<p>And now for the all time stats.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add Google sheet URL</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>all_circuitsheet_url <span class="ot">&lt;-</span> <span class="st">"https://docs.google.com/spreadsheets/d/1re902kjUgsT_eoqXD5Pk_KFj2uIumfIH_0qk9ax3S_g/edit?usp=sharing"</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Authenticate my Google account</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="fu">gs4_auth</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Using an auto-discovered, cached token.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>  To suppress this message, modify your code or options to clearly consent to
+  the use of a cached token.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>  See gargle's "Non-interactive auth" vignette for more details:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>  &lt;https://gargle.r-lib.org/articles/non-interactive-auth.html&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>ℹ The googlesheets4 package is using a cached token for
+  'athenahawkins@utexas.edu'.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the existing Google Sheet into R</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>existing_circuitsheet <span class="ot">&lt;-</span> <span class="fu">gs4_get</span>(all_circuitsheet_url)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Write the data frame to the Google Sheet</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>existing_circuitsheet <span class="sc">|&gt;</span>  </span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">range_write</span>(circuit_race_winners)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>✔ Editing "all-time circuits".</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>✔ Writing to sheet 'tracks'.</code></pre>

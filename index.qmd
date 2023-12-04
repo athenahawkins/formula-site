@@ -237,11 +237,22 @@ Let's check to make sure we have the name of each race, the year it happened, an
 circuit_race_winners |> head(10)
 ```
 
+I also want a tibble for just the most recent race winners for a card on the website.
+
+```{r recent-circuit-winners}
+recent_circuit_winners<- circuit_race_winners |> 
+  filter(yr == 2023)
+
+recent_circuit_winners |> head(10)
+```
+
 ### Write circuits to Google sheets
 
 I'm going to do the same thing I did with Google sheets for my drivers and constructors standings, but this time with circuits!
 
-```{r circuits-sheets}
+Let's start with just the recent winners.
+
+```{r recent-circuits-sheets}
 # Add Google sheet URL
 circuitsheet_url <- "https://docs.google.com/spreadsheets/d/1VOS_3RxH2i3Y7__A1VfdbmX_RPi7JmTa6WmIzfgne84/edit?usp=sharing"
 
@@ -250,6 +261,23 @@ gs4_auth()
 
 # Read the existing Google Sheet into R
 existing_circuitsheet <- gs4_get(circuitsheet_url)
+
+# Write the data frame to the Google Sheet
+existing_circuitsheet |>  
+  range_write(recent_circuit_winners)
+```
+
+And now for the all time stats.
+
+```{r circuit-winners-sheets}
+# Add Google sheet URL
+all_circuitsheet_url <- "https://docs.google.com/spreadsheets/d/1re902kjUgsT_eoqXD5Pk_KFj2uIumfIH_0qk9ax3S_g/edit?usp=sharing"
+
+# Authenticate my Google account
+gs4_auth()
+
+# Read the existing Google Sheet into R
+existing_circuitsheet <- gs4_get(all_circuitsheet_url)
 
 # Write the data frame to the Google Sheet
 existing_circuitsheet |>  
