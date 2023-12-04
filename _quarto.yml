@@ -1,8 +1,9 @@
 project:
   type: website
+  output-dir: docs
 
 website:
-  title: "f1-analysis-site"
+  title: "Making Formula1 data pretty for a website"
   navbar:
     left:
       - href: index.qmd

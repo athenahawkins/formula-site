@@ -1,11 +1,257 @@
 ---
-title: "f1-analysis-site"
+title: "Formula1 Data Analysis"
 ---
 
-This is a Quarto website.
+## About this notebook
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+This is a Quarto website. To learn more about Quarto websites visit https://quarto.org/docs/websites.
 
-```{r}
-1 + 1
+Hi, my name is Athena Hawkins.
+
+- I'm building a website with F1 stats using Formula1 data stored in the Ergast API. I created this notebook so I could easily update my website with driver and constructor standings after each round, or race, of the season.
+
+- To do this, I'll pull the data from the API, convert into a format R can understand, and then upload it to a Google sheet, which will then update my website.
+
+- This notebook shows how I get the data from the API and organize the data for my website. Since I've never used an API before, I used AI to help me troubleshoot errors. If I used AI to help me with any code, I'll explain what each line of code does.
+
+- Let's start by installing some libraries we need.
+
+```{r setup}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(purrr)
+library(dplyr) #for getting API data
+library(httr) #for converting API data into a format R can understand
+library(jsonlite) #for converting API data into a format R can understand
+library(googlesheets4) #for writing data to a Google sheet
+```
+
+## Create functions for standings data
+
+Now I'm going to create a function that will allow me to get updated driver standings (how many points a driver has so far) after any given race in a season. I'll get updated data after each race so I can update the standings on my website.
+
+Here's my function. It looks like a lot, but I'm going to break it down step by step below.
+
+```{r dstandings-function}
+getDriverStandings <- function(year, race) {
+  url <- paste0("http://ergast.com/api/f1/", year, "/", race, "/driverStandings.json?limit=100")
+  raw_dstandings <- GET(url)
+  #get the raw content from the API for driverstandings
+  
+  dstandings_data <- content(raw_dstandings, as = "text") |> 
+    fromJSON()
+  #convert raw content into data R can read
+
+  if (
+    !is.null(dstandings_data$MRData$StandingsTable$StandingsLists$DriverStandings[[1]])) 
+  # condition for when the data does exist
+    
+    {
+    dstandings <- dstandings_data$MRData$StandingsTable$StandingsLists$DriverStandings[[1]]
+  # extract the first response from the driver stanidngs list within all the standing tables
+
+    clean_driver_standings <- dstandings |> 
+      mutate(
+        driverId = Driver$driverId,
+        constructorId = Constructors$constructorId
+      ) |> 
+      select(-positionText, -Driver, -Constructors) |> 
+      mutate(across(c("position", "points", "wins"), as.integer))
+  # get the driverID from the Driver table and create acolumn for it and mutate numeric columns to read as integers
+
+    return(clean_driver_standings)
+  # the return for this condition
+  } 
+  
+  else {
+    stop("Driver standings data not found or has unexpected structure.")
+  }
+  # message to be returned if data can't be found, especially if the race hasn't happened or there is missing data in the API
+}
+```
+
+### The standings function result
+
+And here's the result of that function when we feed it a year and a round.
+
+```{r dstandings-result}
+currentdstandings <- getDriverStandings(2023, 22)
+
+currentdstandings |> head(10)
+```
+
+### Getting the standings data from an API
+
+The first few lines of code in our function set up the API call. Here's what that means:
+
+- When an API is queried (when we ask it for data), it responds with the data in a structured format, commonly JSON. The Ergast API we're using offers data in several formats, but I wanted to work with JSON, so we added a .json to the url tibble.
+
+- I wanted to create a function that would let me easily make new API calls based on the year and the race. I left spaces for the variables year and race in the url tibble.
+
+- I wrote the rest of the call according to the Ergast documentation along with the GET function. Here it is.
+
+- Then I used the `fromJSON()` function to put the content into a data frame in an R tibble.
+
+Extracting nested data
+- The API data often contains nested structures, where certain fields are lists or objects containing multiple elements. You can check out the structure of the Ergast API data here.
+
+- In R (or many programming languages), the `$` operator is used to access components within a structure, like a list or a JSON object. That's why we used the `fromJSON()` function, which I found in R documentation.
+
+- I asked ChatGPT to help me write this line after I gave it specific information about the structure of the data and asked to extract the constructor standings. Here's what it told me:
+
+- The line `standings_data$MRData$StandingsTable$StandingsLists$ConstructorStandings` is a chain of references to access nested components within standings_data which allows us to specify that we want the constructor standings table.
+
+- Once at a certain level of the nested structure, sometimes you might need to access specific elements within a list or object. That's where the `[[ ]]` operator comes from. It's used in R to extract elements from a list by specifying an index or a key.
+
+- `[[1]]` is the key we used to access the first element of the list, constructor standings. In our case. this is the first response for "constructor standings" that comes back when we query the API.
+
+### The same function but for Constructors standings
+
+I used the same structure to create a formula for getting standings for the constructors (teams). Here's what it looks like.
+
+```{r cstandings-function}
+getConstructorStandings <- function(year, race) {
+url <- paste0("http://ergast.com/api/f1/", year,"/", race, "/constructorStandings.json?limit=100")
+  cstandings_raw <- GET(url)
+
+  cstandings_data <- content(cstandings_raw, as = "text") |> 
+    fromJSON()
+
+  if (!is.null(cstandings_data$MRData$StandingsTable$StandingsLists$ConstructorStandings[[1]])) {
+    cstandings <- cstandings_data$MRData$StandingsTable$StandingsLists$ConstructorStandings[[1]]
+
+   cstandings_clean <- cstandings |> 
+      mutate(
+        constructorId = Constructor$constructorId
+      ) %>%
+      select(-Constructor, -positionText) |> 
+      mutate(across(c("position", "points", "wins"), as.integer))
+
+    return(cstandings_clean)
+  } else {
+    stop("Constructor standings data not found or has unexpected structure.")
+  }
+}
+
+```
+
+### Constructors standings results
+
+Here are the constructor standings we got. I hate that Ferrari is in second. But all looks correct!
+
+```{r cstandings-result}
+currentcstandings <- getConstructorStandings(2023, 22)
+
+currentcstandings |> head(5)
+```
+
+## Writing results to Google Sheets
+
+We installed the googlesheets4 package in our setup. It's part of tidyverse and it's really cool. You can read this documentation here to learn more about how to write data to an existing sheet.
+
+### Write drivers standings to google sheet
+
+I'm going to put the url for the Google sheet with my drivers data into a tibble, then use the range_write() funcion to import the current standings to the range I want!
+
+```{r drivers-sheet}
+# Add Google sheet URL
+driversheet_url <- "https://docs.google.com/spreadsheets/d/1ixos7uWmrzk0IJBtCcbNDnBh5UO6FDklzT7eTd1MXgE/edit#gid=0"
+
+# Authenticate my Google account
+gs4_auth()
+
+# Read the existing Google Sheet into R
+existing_driversheet <- gs4_get(driversheet_url)
+
+# Write the data frame to the Google Sheet
+existing_driversheet |>  
+  range_write(currentdstandings, range = "A1:D23")
+```
+
+Here's a link to the Google sheet. The first four rows of data come from this notebook!
+
+### Write constructor standings to Google sheets
+
+I'm going to do the same thing here for constructor standings.
+
+```{r constructors-sheet}
+# Add Google sheet URL
+constructorsheet_url <- "https://docs.google.com/spreadsheets/d/1NjnxaNQst0E1y6l-e4GTIqDsM2sRLll3ekCWpcG-lDo/edit?usp=sharing"
+
+# Authenticate my Google account
+gs4_auth()
+
+# Read the existing Google Sheet into R
+existing_constructorsheet <- gs4_get(constructorsheet_url)
+
+# Write the data frame to the Google Sheet
+existing_constructorsheet |>  
+  range_write(currentcstandings, range = "A1:D11")
+```
+
+## Get circuits data
+
+I'm going to download the circuits data because I'll need to pull it each race anyways to get the most recent past winner.
+
+```{r circuits-data}
+circuits_raw <- read_csv("data-raw/circuits.csv")
+results_raw <- read_csv("data-raw/lap_times.csv")
+races_raw <- read_csv("data-raw/races.csv")
+drivers_raw <- read_csv("data-raw/drivers.csv")
+```
+
+### Get circuit win data
+
+Now I want to get data for the past winners at each circuit, plus the circuit location. I'll build these into my baked circuit pages.
+
+```{r circuits-wins}
+race_winners <- results_raw |> 
+  group_by(raceId) |> 
+  filter(lap == max(lap)) |>  # Filter for the last lap
+  filter(position == 1) |>    # Filter for position 1 in the last lap
+  ungroup()
+
+# Joining race_winners with results_raw based on raceId to get circuitId
+race_winners_with_circuitId <- race_winners |> 
+  left_join(races_raw |>  select(raceId, circuitId, date), by = "raceId")
+
+race_winners_with_circuitName <- race_winners_with_circuitId |>
+  left_join(circuits_raw |> select(circuitId, name, location,country), by ="circuitId")
+
+
+race_winners_per_circuit <- race_winners_with_circuitName |> 
+  left_join(drivers_raw |> select(driverId, surname, forename), by ='driverId')
+  
+
+race_winners_circuit_name_years <- race_winners_per_circuit |> 
+  mutate(yr = year(date),
+        winner_name = paste(forename, surname, sep = " "))
+
+circuit_race_winners <- race_winners_circuit_name_years |> 
+  filter(yr >= 2016) |> 
+  select(name, winner_name, yr)
+```
+
+### Check the result
+
+```{r circuit-winners}
+circuit_race_winners |> head(10)
+```
+
+### Write circuits to Google sheets
+
+```{r circuits-sheets}
+# Add Google sheet URL
+circuitsheet_url <- "https://docs.google.com/spreadsheets/d/1VOS_3RxH2i3Y7__A1VfdbmX_RPi7JmTa6WmIzfgne84/edit?usp=sharing"
+
+# Authenticate my Google account
+gs4_auth()
+
+# Read the existing Google Sheet into R
+existing_circuitsheet <- gs4_get(circuitsheet_url)
+
+# Write the data frame to the Google Sheet
+existing_circuitsheet |>  
+  range_write(circuit_race_winners)
 ```
