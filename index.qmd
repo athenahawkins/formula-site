@@ -16,7 +16,9 @@ Hi, my name is Athena Hawkins.
 
 - Let's start by installing some libraries we need.
 
-```{r setup}
+```{r}
+#| message: false
+#| label: setup
 library(tidyverse)
 library(lubridate)
 library(dplyr) #for getting API data
@@ -192,7 +194,9 @@ existing_constructorsheet |>
 
 I'm going to download the circuits data because I'll need to pull it each race anyways to get the most recent past winner.
 
-```{r circuits-data}
+```{r}
+#| message: false
+#| label: circuits-data
 circuits_raw <- read_csv("data-raw/circuits.csv")
 results_raw <- read_csv("data-raw/lap_times.csv")
 races_raw <- read_csv("data-raw/races.csv")
@@ -248,23 +252,25 @@ recent_circuit_winners |> head(10)
 
 ### Write circuits to Google sheets
 
+```{r}
+recent_circuit_winners
+```
+
+
 I'm going to do the same thing I did with Google sheets for my drivers and constructors standings, but this time with circuits!
 
 Let's start with just the recent winners.
 
 ```{r recent-circuits-sheets}
 # Add Google sheet URL
-circuitsheet_url <- "https://docs.google.com/spreadsheets/d/1VOS_3RxH2i3Y7__A1VfdbmX_RPi7JmTa6WmIzfgne84/edit?usp=sharing"
-
-# Authenticate my Google account
-gs4_auth()
+recent_circuitsheet_url <- "https://docs.google.com/spreadsheets/d/1VOS_3RxH2i3Y7__A1VfdbmX_RPi7JmTa6WmIzfgne84/edit?usp=sharing"
 
 # Read the existing Google Sheet into R
-existing_circuitsheet <- gs4_get(circuitsheet_url)
+recent_existing_circuitsheet <- gs4_get(recent_circuitsheet_url)
 
 # Write the data frame to the Google Sheet
-existing_circuitsheet |>  
-  range_write(recent_circuit_winners)
+recent_existing_circuitsheet |>  
+  range_write(recent_circuit_winners, range = "A1:C100")
 ```
 
 And now for the all time stats.
