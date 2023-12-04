@@ -2,12 +2,10 @@
 title: "About"
 ---
 
-About this site
-
-Hi, I'm Athena and I'm a journalism student who likes data and Formula1.
+### Hi, I'm Athena. I'm a journalism student at UT-Austin who likes data and Formula1.
 
 I'm making a website with Formula1 racing data for a class assignment in Intro Coding for Journalists. It is due Dec. 4, 2023.
 
 I'm using Visual Studio Code, Bootstrap and Nunjucks to make my website. But I like R and I'm using it to get the data from an API and get it ready for my website pages.
 
-I'll put the link to my website here when I finish it.
+Here's the [link to my website](https://athenahawkins.github.io/athena-formula/). As of the 2023 season, it is up to date!

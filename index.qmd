@@ -18,9 +18,7 @@ Hi, my name is Athena Hawkins.
 
 ```{r setup}
 library(tidyverse)
-library(janitor)
 library(lubridate)
-library(purrr)
 library(dplyr) #for getting API data
 library(httr) #for converting API data into a format R can understand
 library(jsonlite) #for converting API data into a format R can understand
@@ -219,11 +217,9 @@ race_winners_with_circuitId <- race_winners |>
 race_winners_with_circuitName <- race_winners_with_circuitId |>
   left_join(circuits_raw |> select(circuitId, name, location,country), by ="circuitId")
 
-
 race_winners_per_circuit <- race_winners_with_circuitName |> 
   left_join(drivers_raw |> select(driverId, surname, forename), by ='driverId')
   
-
 race_winners_circuit_name_years <- race_winners_per_circuit |> 
   mutate(yr = year(date),
         winner_name = paste(forename, surname, sep = " "))
@@ -235,11 +231,15 @@ circuit_race_winners <- race_winners_circuit_name_years |>
 
 ### Check the result
 
+Let's check to make sure we have the name of each race, the year it happened, and the winner.
+
 ```{r circuit-winners}
 circuit_race_winners |> head(10)
 ```
 
 ### Write circuits to Google sheets
+
+I'm going to do the same thing I did with Google sheets for my drivers and constructors standings, but this time with circuits!
 
 ```{r circuits-sheets}
 # Add Google sheet URL
