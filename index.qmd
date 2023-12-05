@@ -303,6 +303,6 @@ write_csv(currentdstandings, "drivers_standings.csv")
 Now I'll use the same function to do the same thing for my circuit winners data.
 
 ```{r table-csv}
-write_csv(circuit_race_winners, "table_winners.csv")
+write_csv(circuit_race_winners, "circuit_winners.csv")
 ```
 
