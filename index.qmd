@@ -292,11 +292,12 @@ I want to make charts on Datawrapper that will automatically update when I run t
 
 I'll write my current drivers standings tibble from earlier to a csv with the `write_csv()` function.
 
+First, I want to add the driver's name back into the tibble.
+
 ```{r drivers-csv}
 # Use the write_csv function to create a .csv with drivers standings
 write_csv(currentdstandings, "drivers_standings.csv")
 ```
-
 
 ### Data for searchable winners table
 
@@ -306,3 +307,4 @@ Now I'll use the same function to do the same thing for my circuit winners data.
 write_csv(circuit_race_winners, "circuit_winners.csv")
 ```
 
+I realized I need to put the drivers name back in the standings for my charts to look pretty. I'll be back soon with that update!
